@@ -102,7 +102,7 @@ export default function GiftSection() {
                   </div>
                   <div>
                     <p className="text-[9px] uppercase tracking-wider text-zinc-400">Atas Nama</p>
-                    <p className="font-serif text-sm font-bold text-primary-dark">Asep Makbul Saepuloh</p>
+                    <p className="font-serif text-sm font-bold text-primary-dark">Yati Suryati</p>
                   </div>
                 </div>
               </div>
