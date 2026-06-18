@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+:root {
+  --background: #FAF7F2; /* Warm Cream */
+  --foreground: #2C302E; /* Charcoal */
+}
+
+@theme {
+  --color-primary: #5F7161;
+  --color-primary-light: #859687;
+  --color-primary-dark: #3F4E41;
+  
+  --color-accent: #C5A880;
+  --color-accent-light: #E0D3C1;
+  --color-accent-dark: #A58860;
+  
+  --color-neutral-warm: #FAF7F2;
+  --color-charcoal: #2C302E;
+  
+  --font-serif: var(--font-serif), Georgia, serif;
+  --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
+
+  /* Premium Custom Animations */
+  --animate-zoom-slow: zoom-slow 22s ease-in-out infinite;
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-shimmer: shimmer 3s linear infinite;
+  --animate-wobble: wobble 6s ease-in-out infinite;
+
+  @keyframes zoom-slow {
+    0%, 100% { transform: scale(1.02); }
+    50% { transform: scale(1.12); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-3deg) translateX(0); }
+    50% { transform: rotate(3deg) translateX(4px); }
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Scrollbar for Wish Feed */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(197, 168, 128, 0.3);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(197, 168, 128, 0.6);
+}
+
+/* Gold Shimmer Button Effect Utility */
+.shimmer-gold {
+  background-size: 200% auto;
+  background-image: linear-gradient(
+    to right,
+    #5F7161 0%,
+    #859687 25%,
+    #C5A880 50%,
+    #859687 75%,
+    #5F7161 100%
+  );
+  animation: shimmer 4s linear infinite;
+}
+
+.shimmer-gold-hover:hover {
+  background-size: 200% auto;
+  background-image: linear-gradient(
+    to right,
+    #3F4E41 0%,
+    #A58860 50%,
+    #3F4E41 100%
+  );
+  animation: shimmer 2s linear infinite;
+}
+
+/* Print Rules - Ensure only the invitation card is printed */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Hide absolutely everything */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Display only the printable card and its elements */
+  #printable-card,
+  #printable-card * {
+    visibility: visible;
+  }
+
+  #printable-card {
+    position: absolute;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 6.5in !important; /* Elegant card shape */
+    height: 9.5in !important;
+    border: 3px double #A58860 !important;
+    padding: 2.5rem !important;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}
