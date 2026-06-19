@@ -9,12 +9,15 @@ import ScrollReveal from "@/components/ScrollReveal";
 import Countdown from "@/components/Countdown";
 import FallingPetals from "@/components/FallingPetals";
 import GiftSection from "@/components/GiftSection";
-import RsvpForm from "@/components/RsvpForm";
+
 import WishesFeed from "@/components/WishesFeed";
 import DownloadCard from "@/components/DownloadCard";
+import DeveloperPanel from "@/components/DeveloperPanel";
+import { useDeveloperMode } from "@/hooks/useDeveloperMode";
 
 export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
+  const { hideZikriPhoto, customZikriPhoto } = useDeveloperMode();
 
   // Lock/unlock body scroll based on cover status
   useEffect(() => {
@@ -121,6 +124,18 @@ export default function Home() {
                   background:"radial-gradient(circle, rgba(197,168,128,.22) 0%, rgba(95,113,97,.08) 55%, transparent 75%)",
                   borderRadius:"50%",filter:"blur(18px)"}}>
               </div>
+
+              {/* Zikri's Photo */}
+              {!hideZikriPhoto && (
+                <Image
+                  src={customZikriPhoto || "/zikri.jpeg"}
+                  alt="Zikri"
+                  width={180}
+                  height={180}
+                  className="absolute z-30 rounded-full object-cover shadow-xl border-2 border-accent/50"
+                  style={{top: "20%", left: "50%", transform: "translateX(-50%)"}}
+                />
+              )}
 
               {/* THE CENTRAL LUXURY CARD */}
               <ScrollReveal animation="zoom-in-up" duration={1300} className="w-full z-20 px-6">
@@ -440,9 +455,7 @@ export default function Home() {
                 </div>
               </ScrollReveal>
 
-              <ScrollReveal animation="zoom-in-up">
-                <RsvpForm />
-              </ScrollReveal>
+
 
               <ScrollReveal animation="zoom-in-up" delay={150}>
                 <WishesFeed />
@@ -485,7 +498,7 @@ export default function Home() {
                   <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-accent/40" />
                 </div>
                 <p className="font-sans text-xs text-accent-light leading-relaxed italic">
-                  "Tiada kebahagiaan yang lebih berarti bagi kami selain kehadiran serta doa restu Bapak/Ibu/Saudara/i sekalian."
+                  {'"Tiada kebahagiaan yang lebih berarti bagi kami selain kehadiran serta doa restu Bapak/Ibu/Saudara/i sekalian."'}
                 </p>
                 <div className="flex items-center justify-center gap-2">
                   <div className="h-[1px] w-10 bg-accent/30" />
@@ -505,12 +518,13 @@ export default function Home() {
                   Keluarga Bp. Asep Makbul &amp; Ibu Yati Suryati
                 </p>
                 <p className="font-sans text-[9px] text-zinc-500 pt-8 select-none">
-                  &copy; 2026 Ilyasaalfrdzi. Created with Love.
+                  © 2026 Ilyasaalfrdzi. Created with Love.
                 </p>
               </ScrollReveal>
             </footer>
           </div>
         )}
+        <DeveloperPanel />
       </main>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 interface Petal {
   id: number;
@@ -14,9 +14,7 @@ interface Petal {
 }
 
 export default function FallingPetals() {
-  const [petals, setPetals] = useState<Petal[]>([]);
-
-  useEffect(() => {
+  const [petals, setPetals] = useState<Petal[]>(() => {
     // Generate petals after mount to avoid server-side matching issues
     const colorChoices = [
       "rgba(95, 113, 97, 0.15)", // Primary Sage Green
@@ -24,7 +22,7 @@ export default function FallingPetals() {
       "rgba(133, 150, 135, 0.15)", // Light Sage Green
     ];
 
-    const generatedPetals = Array.from({ length: 15 }).map((_, index) => {
+    return Array.from({ length: 15 }).map((_, index) => {
       const left = Math.random() * 100; // random X position
       const delay = Math.random() * 8; // random delay before starting
       const duration = 8 + Math.random() * 10; // fall time between 8s and 18s
@@ -44,9 +42,7 @@ export default function FallingPetals() {
         color,
       };
     });
-
-    setPetals(generatedPetals);
-  }, []);
+  });
 
   return (
     <div className="pointer-events-none fixed inset-y-0 w-full max-w-md left-1/2 -translate-x-1/2 overflow-hidden z-20">

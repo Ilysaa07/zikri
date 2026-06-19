@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { MailOpen } from "lucide-react";
+import { useDeveloperMode } from "@/hooks/useDeveloperMode";
 
 interface OpeningScreenProps {
   onOpen: () => void;
@@ -9,16 +11,21 @@ interface OpeningScreenProps {
 }
 
 export default function OpeningScreen({ onOpen, isOpen }: OpeningScreenProps) {
-  const [guestName, setGuestName] = useState<string>("Tamu Undangan");
+  const [guestName, setGuestName] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const toParam = params.get("to");
+      if (toParam) {
+        return decodeURIComponent(toParam);
+      }
+    }
+    return "Tamu Undangan";
+  });
   const [isDismissed, setIsDismissed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { hideZikriPhoto, customZikriPhoto } = useDeveloperMode();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const toParam = params.get("to");
-    if (toParam) {
-      setGuestName(decodeURIComponent(toParam));
-    }
     const timer = setTimeout(() => setMounted(true), 120);
     return () => clearTimeout(timer);
   }, []);
@@ -119,6 +126,16 @@ export default function OpeningScreen({ onOpen, isOpen }: OpeningScreenProps) {
           <div className="absolute w-40 h-40 rounded-full border border-accent/20 bg-white/40 shadow-inner" />
           {/* Inner dashed */}
           <div className="absolute w-34 h-34 rounded-full border border-dashed border-accent/15" />
+          {/* Zikri's Photo */}
+          {!hideZikriPhoto && (
+            <Image
+              src={customZikriPhoto || "/zikri.jpeg"}
+              alt="Zikri"
+              width={100}
+              height={100}
+              className="rounded-full object-cover w-24 h-24 shadow-lg"
+            />
+          )}
           {/* Diamond sparkles on ring */}
           {[0,90,180,270].map((deg,i) => (
             <div key={i} className="absolute w-40 h-40 rounded-full" style={{transform:`rotate(${deg}deg)`}}>

@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { MessageSquare, Send, Search, Loader2, Calendar, X } from "lucide-react";
+import { MessageSquare, Send, Search, Loader2, Calendar, X, Trash2, Edit2, CheckCircle2 } from "lucide-react";
+import { useDeveloperMode } from "@/hooks/useDeveloperMode";
 
 interface Wish {
   id: string;
@@ -21,6 +22,10 @@ export default function WishesFeed() {
   const [isLoadingFeed, setIsLoadingFeed] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [localEditedWishes, setLocalEditedWishes] = useState<Record<string, { name?: string; message?: string }>>({});
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const { isDeveloperMode, editingWishId, setEditingWishId } = useDeveloperMode();
 
   // Helper to assign deterministically a premium soft color for avatars
   const getAvatarStyle = (senderName: string) => {
@@ -67,7 +72,7 @@ export default function WishesFeed() {
         minute: "2-digit",
       };
       return date.toLocaleDateString("id-ID", options);
-    } catch (err) {
+    } catch {
       return "Beberapa waktu lalu";
     }
   };
@@ -107,6 +112,24 @@ export default function WishesFeed() {
             if (prev.some((w) => w.id === newWish.id)) return prev;
             return [newWish, ...prev];
           });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "wishes" },
+        (payload) => {
+          const updatedWish = payload.new as Wish;
+          setWishes((prev) =>
+            prev.map((w) => (w.id === updatedWish.id ? updatedWish : w))
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "wishes" },
+        (payload) => {
+          const deletedWishId = (payload.old as Wish).id;
+          setWishes((prev) => prev.filter((w) => w.id !== deletedWishId));
         }
       )
       .subscribe();
@@ -160,9 +183,63 @@ export default function WishesFeed() {
     }
   };
 
-  const filteredWishes = wishes.filter((wish) =>
-    wish.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredWishes = wishes.filter(
+    (wish) =>
+      wish.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleSaveWishEdit = async (wish: Wish) => {
+    const edited = localEditedWishes[wish.id];
+    if (!edited) return;
+
+    setIsSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from("wishes")
+        .update({
+          name: edited.name ?? wish.name,
+          message: edited.message ?? wish.message,
+        })
+        .eq("id", wish.id);
+
+      if (error) {
+        console.error("Gagal mengedit ucapan:", error);
+        setErrorMsg(`Gagal mengedit ucapan: ${error.message} (hint: Check Supabase RLS policies)`);
+      } else {
+        setEditingWishId(null);
+        setLocalEditedWishes((prev) => {
+          const newState = { ...prev };
+          delete newState[wish.id];
+          return newState;
+        });
+      }
+    } catch (err) {
+      console.error("Network error editing wish:", err);
+      setErrorMsg("Koneksi bermasalah. Coba lagi.");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleDeleteWish = async (wishId: string) => {
+    setIsDeleting(wishId);
+    try {
+      const { error } = await supabase
+        .from("wishes")
+        .delete()
+        .eq("id", wishId);
+
+      if (error) {
+        console.error("Gagal menghapus ucapan:", error);
+        setErrorMsg(`Gagal menghapus ucapan: ${error.message} (hint: Check Supabase RLS policies)`);
+      }
+    } catch (err) {
+      console.error("Network error deleting wish:", err);
+      setErrorMsg("Koneksi bermasalah. Coba lagi.");
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   return (
     <div className="space-y-8 max-w-lg mx-auto">
@@ -310,33 +387,102 @@ export default function WishesFeed() {
                     <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold font-serif shadow-inner ${getAvatarStyle(wish.name)}`}>
                       {getInitial(wish.name)}
                     </div>
-                    <span className="font-serif text-sm font-bold text-primary-dark">
-                      {wish.name}
-                    </span>
+                    {editingWishId === wish.id ? (
+                      <input
+                        type="text"
+                        value={localEditedWishes[wish.id]?.name ?? wish.name}
+                        onChange={(e) =>
+                          setLocalEditedWishes((prev) => ({
+                            ...prev,
+                            [wish.id]: { ...prev[wish.id], name: e.target.value },
+                          }))
+                        }
+                        className="font-serif text-sm font-bold text-primary-dark border border-accent/30 rounded px-1 py-0.5 w-full"
+                      />
+                    ) : (
+                      <span className="font-serif text-sm font-bold text-primary-dark">
+                        {localEditedWishes[wish.id]?.name ?? wish.name}
+                      </span>
+                    )}
                   </div>
 
-                  {wish.attendance && (
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[8px] font-bold ${
-                        wish.attendance === "hadir"
-                          ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                  <div className="flex items-center gap-2">
+                    {wish.attendance && (
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[8px] font-bold ${
+                          wish.attendance === "hadir"
+                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                            : wish.attendance === "tidak_hadir"
+                            ? "bg-red-50 text-red-500 border border-red-100"
+                            : "bg-amber-50 text-amber-600 border border-amber-100"
+                        }`}
+                      >
+                        {wish.attendance === "hadir"
+                          ? "Hadir"
                           : wish.attendance === "tidak_hadir"
-                          ? "bg-red-50 text-red-500 border border-red-100"
-                          : "bg-amber-50 text-amber-600 border border-amber-100"
-                      }`}
-                    >
-                      {wish.attendance === "hadir"
-                        ? "Hadir"
-                        : wish.attendance === "tidak_hadir"
-                        ? "Berhalangan"
-                        : "Ragu"}
-                    </span>
-                  )}
+                          ? "Berhalangan"
+                          : "Ragu"}
+                      </span>
+                    )}
+
+                    {isDeveloperMode && (
+                      <div className="flex gap-1">
+                        {editingWishId === wish.id ? (
+                          <button
+                            onClick={() => handleSaveWishEdit(wish)}
+                            disabled={isSavingEdit}
+                            className="p-1 text-emerald-600 hover:text-emerald-800 disabled:opacity-50"
+                            title="Simpan"
+                          >
+                            {isSavingEdit ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setEditingWishId(wish.id)}
+                            className="p-1 text-zinc-500 hover:text-primary-dark"
+                            title="Edit"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteWish(wish.id)}
+                          disabled={isDeleting === wish.id}
+                          className="p-1 text-zinc-500 hover:text-red-600 disabled:opacity-50"
+                          title="Hapus"
+                        >
+                          {isDeleting === wish.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <p className="font-sans text-xs text-zinc-600 leading-relaxed pl-9 whitespace-pre-wrap">
-                  {wish.message}
-                </p>
+                {editingWishId === wish.id ? (
+                  <textarea
+                    value={localEditedWishes[wish.id]?.message ?? wish.message}
+                    onChange={(e) =>
+                      setLocalEditedWishes((prev) => ({
+                        ...prev,
+                        [wish.id]: { ...prev[wish.id], message: e.target.value },
+                      }))
+                    }
+                    className="font-sans text-xs text-zinc-600 leading-relaxed w-full pl-9 border border-accent/30 rounded px-2 py-1"
+                    rows={3}
+                  />
+                ) : (
+                  <p className="font-sans text-xs text-zinc-600 leading-relaxed pl-9 whitespace-pre-wrap">
+                    {localEditedWishes[wish.id]?.message ?? wish.message}
+                  </p>
+                )}
 
                 <p className="text-[9px] text-zinc-400 text-right mt-2 pl-9 flex items-center justify-end gap-1">
                   <Calendar className="h-2.5 w-2.5" />

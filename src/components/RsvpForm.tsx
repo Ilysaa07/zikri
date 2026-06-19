@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { CheckCircle, Loader2, Send, Users } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -16,7 +16,7 @@ export default function RsvpForm() {
   const [errorMsg, setErrorMsg] = useState("");
   const [totalAttending, setTotalAttending] = useState<number | null>(null);
 
-  const fetchTotalAttending = async () => {
+  const fetchTotalAttending = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("rsvps")
@@ -26,15 +26,20 @@ export default function RsvpForm() {
       if (data) {
         const sum = data.reduce((acc, row) => acc + (row.guests_count || 1), 0);
         setTotalAttending(sum);
+      } else if (error) {
+        console.error("Supabase error fetching attendance sum:", error);
       }
     } catch (err) {
       console.error("Error fetching attendance sum:", err);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchTotalAttending();
-  }, [isSubmitted]);
+    const loadTotalAttending = async () => {
+      await fetchTotalAttending();
+    };
+    loadTotalAttending();
+  }, [isSubmitted, fetchTotalAttending]);
 
   const triggerConfetti = () => {
     try {

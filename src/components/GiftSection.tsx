@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Copy, Check, Gift, CreditCard, Landmark, MapPin } from "lucide-react";
+import Image from "next/image";
+import { Copy, Check, Gift, CreditCard, MapPin } from "lucide-react";
 
 export default function GiftSection() {
   const [activeTab, setActiveTab] = useState<"transfer" | "physical">("transfer");
   const [copiedDana, setCopiedDana] = useState(false);
-  const [copiedBca, setCopiedBca] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState(false);
 
   const handleCopy = (text: string, setCopied: (val: boolean) => void) => {
@@ -69,10 +69,7 @@ export default function GiftSection() {
                 
                 <div className="flex justify-between items-center mb-5">
                   <div className="flex items-center gap-1.5">
-                    <img src="/dana.png" alt="DANA" className="h-5.5" onError={(e) => {
-                      // Fallback if image not found
-                      e.currentTarget.style.display = "none";
-                    }} />
+                    <Image src="/dana.png" alt="DANA" width={60} height={22} className="h-5.5 w-auto" />
                     <span className="font-sans italic font-bold text-xl text-[#118EEA]">Dana</span>
                   </div>
                   <span className="text-[9px] font-bold tracking-widest text-[#118EEA] bg-[#118EEA]/10 px-2 py-0.5 rounded-full uppercase">

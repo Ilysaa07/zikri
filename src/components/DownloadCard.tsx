@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Download, X, Printer, Calendar, MapPin, Clock, QrCode } from "lucide-react";
+import { Download, X, Printer, Calendar, MapPin, Clock } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function DownloadCard() {
   const [showModal, setShowModal] = useState(false);
@@ -13,7 +14,31 @@ export default function DownloadCard() {
   };
 
   return (
-    <div className="text-center py-6 w-full max-w-[240px]">
+    <>
+      {/* Print Styles */}
+      <style>{`
+        @media print {
+          .print-only {
+            display: block !important;
+          }
+          .print-hidden {
+            display: none !important;
+          }
+          @page {
+            margin: 1cm;
+            size: portrait;
+          }
+          body {
+            background: white !important;
+          }
+          .printable-container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 auto !important;
+          }
+        }
+      `}</style>
+      <div className="text-center py-6 w-full max-w-[240px]">
       <button
         onClick={() => setShowModal(true)}
         className="inline-flex items-center justify-center gap-2 w-full rounded-xl border border-accent/30 bg-white/70 px-6 py-3 text-xs font-semibold tracking-widest text-accent-dark shadow-sm backdrop-blur-sm transition-all duration-300 hover:bg-accent hover:text-white hover:scale-105 active:scale-95 cursor-pointer uppercase"
@@ -25,7 +50,7 @@ export default function DownloadCard() {
       {/* Preview Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out] print:hidden">
-          <div className="relative w-full max-w-md rounded-2xl bg-[#FAF7F2] p-6 shadow-2xl border border-accent/20 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-md rounded-2xl bg-[#FAF7F2] p-6 shadow-2xl border border-accent/20 max-h-[95vh] overflow-y-auto">
             {/* Close Button */}
             <button
               onClick={() => setShowModal(false)}
@@ -91,16 +116,16 @@ export default function DownloadCard() {
                 </div>
               </div>
 
-              {/* QR Code Gold SVG */}
-              <div className="flex flex-col items-center gap-1 my-4 bg-accent/5 p-2 rounded-xl border border-accent/10 w-fit mx-auto select-none">
-                <svg className="w-14 h-14 text-accent-dark" viewBox="0 0 29 29" fill="none" stroke="currentColor" strokeWidth="1">
-                  <path d="M1 1h7v7H1zM3 3h3v3H3zM21 1h7v7h-7zM23 3h3v3h-3zM1 21h7v7H1zM3 23h3v3H3z" fill="currentColor" />
-                  <path d="M12 1h2v2h-2zM16 1h2v3h-2zM12 5h4v2h-4zM10 8h2v2h-2zM14 9h3v2h-3zM1 10h3v2H1zM6 10h2v2H6zM18 10h3v2h-3zM23 10h5v2h-5z" fill="currentColor" />
-                  <path d="M10 13h2v4h-2zM14 13h4v2h-4zM20 13h3v2h-3zM25 13h3v3h-3zM10 19h3v2h-3zM15 18h2v3h-2zM19 18h4v2h-4zM25 18h3v2h-3z" fill="currentColor" />
-                  <path d="M11 23h4v2h-4zM17 22h3v3h-3zM22 22h2v4h-2zM26 23h2v4h-2z" fill="currentColor" />
-                  <path d="M12 26h3v2h-3zM17 26h4v2h-4zM23 27h4v1h-4z" fill="currentColor" />
-                </svg>
-                <span className="font-sans text-[7px] uppercase tracking-wider text-accent-dark font-semibold">Scan Maps & RSVP</span>
+              {/* QR Code Linking to Website */}
+              <div className="flex flex-col items-center gap-1 my-4 bg-accent/5 p-3 rounded-xl border border-accent/10 w-fit mx-auto select-none">
+                <QRCodeSVG 
+                  value={typeof window !== "undefined" ? window.location.origin : "https://zikri-khitanan.vercel.app"} 
+                  size={80}
+                  level="H"
+                  fgColor="#5F7161"
+                  bgColor="transparent"
+                />
+                <span className="font-sans text-[7px] uppercase tracking-wider text-accent-dark font-semibold">Scan untuk Buka Website</span>
               </div>
 
               {/* VIP Hosts */}
@@ -131,5 +156,6 @@ export default function DownloadCard() {
         </div>
       )}
     </div>
+    </>
   );
 }
